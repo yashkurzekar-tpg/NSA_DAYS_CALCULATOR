@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekend Support Calculator</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+    padding:30px;
+}
+
+.container{
+    max-width:1400px;
+    margin:auto;
+}
+
+.header{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.header h1{
+    color:#1f2937;
+    margin-bottom:5px;
+}
+
+.header p{
+    color:#6b7280;
+}
+
+.main-layout{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:25px;
+}
+
+.card{
+    background:white;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+    padding:20px;
+}
+
+.card h2{
+    margin-bottom:15px;
+    color:#111827;
+}
+
+#monthTitle{
+    text-align:center;
+    font-size:22px;
+    font-weight:600;
+    margin-bottom:15px;
+}
+
+.calendar{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+}
+
+.day-header{
+    text-align:center;
+    font-weight:bold;
+    background:#e5e7eb;
+    padding:10px;
+    border-radius:6px;
+}
+
+.day{
+    text-align:center;
+    padding:12px;
+    cursor:pointer;
+    border-radius:8px;
+    border:1px solid #d1d5db;
+    transition:.2s;
+}
+
+.day:hover{
+    transform:scale(1.05);
+}
+
+.weekend{
+    background:#ffe5e5;
+    color:#c62828;
+    font-weight:bold;
+}
+
+.selected{
+    background:#22c55e !important;
+    color:white !important;
+    border:none;
+}
+
+textarea{
+    width:100%;
+    height:90px;
+    resize:none;
+    border:1px solid #d1d5db;
+    border-radius:8px;
+    padding:10px;
+    margin-top:10px;
+    font-size:13px;
+    line-height:1.4;
+}
+
+.result-box{
+    background:#f9fafb;
+    border-left:5px solid #2563eb;
+    padding:15px;
+    border-radius:8px;
+    white-space:pre-wrap;
+    line-height:1.8;
+    font-size:15px;
+}
+
+.summary{
+    border-left-color:#16a34a;
+}
+
+.btn{
+    margin-top:10px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#1d4ed8;
+}
+
+@media(max-width:1000px){
+
+.main-layout{
+    grid-template-columns:1fr;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>NSA Days Calculator</h1>
+        <p>Select dates and calculate Weekend / Extended Support effort</p>
+    </div>
+
+    <div class="main-layout">
+
+        <!-- LEFT -->
+
+        <div class="card">
+
+            <div id="monthTitle"></div>
+
+            <div class="calendar" id="calendar"></div>
+
+        </div>
+
+        <!-- RIGHT -->
+
+        <div>
+
+            <div class="card">
+                <h2>Selected Dates Output</h2>
+
+                <textarea id="dateOutput" readonly></textarea>
+
+                <button class="btn" onclick="copyOutput()">
+                    Copy Output
+                </button>
+            </div>
+
+            <br>
+
+            <div class="card">
+                <h2>Calculation</h2>
+
+                <div class="result-box" id="calcOutput">
+Select dates to calculate...
+                </div>
+            </div>
+
+            <br>
+
+            <div class="card">
+                <h2>Result Summary</h2>
+
+                <div class="result-box summary" id="summaryOutput">
+Select dates to see summary...
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const today = new Date();
+const year = today.getFullYear();
+const month = today.getMonth();
+
+const monthNames = [
+"January","February","March","April","May","June",
+"July","August","September","October","November","December"
+];
+
+document.getElementById("monthTitle").innerHTML =
+monthNames[month] + " " + year;
+
+const calendar = document.getElementById("calendar");
+
+const headers = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+headers.forEach(day=>{
+
+    let el=document.createElement("div");
+    el.className="day-header";
+    el.innerHTML=day;
+
+    calendar.appendChild(el);
+
+});
+
+const firstDay=new Date(year,month,1).getDay();
+
+for(let i=0;i<firstDay;i++){
+
+    let blank=document.createElement("div");
+    calendar.appendChild(blank);
+
+}
+
+const totalDays=new Date(year,month+1,0).getDate();
+
+const selected=[];
+
+for(let d=1; d<=totalDays; d++){
+
+    const date=new Date(year,month,d);
+    const dayNo=date.getDay();
+
+    let div=document.createElement("div");
+
+    div.className="day";
+
+    if(dayNo===0 || dayNo===6){
+        div.classList.add("weekend");
+    }
+
+    div.innerHTML=d;
+
+    div.onclick=function(){
+
+        const idx=selected.indexOf(d);
+
+        if(idx>-1){
+            selected.splice(idx,1);
+            div.classList.remove("selected");
+        }
+        else{
+            selected.push(d);
+            div.classList.add("selected");
+        }
+
+        updateOutput();
+
+    };
+
+    calendar.appendChild(div);
+}
+
+function updateOutput(){
+
+    selected.sort((a,b)=>a-b);
+
+    let weekendCount=0;
+    let extCount=0;
+
+    const result=[];
+
+    selected.forEach(day=>{
+
+        const currentDate=new Date(year,month,day);
+
+        const dow=currentDate.getDay();
+
+        const dd=String(day).padStart(2,"0");
+        const mm=String(month+1).padStart(2,"0");
+
+        if(dow===0 || dow===6){
+
+            weekendCount++;
+
+            result.push(
+                dd + "/" + mm + " (Weekend)"
+            );
+
+        }
+        else{
+
+            extCount++;
+
+            result.push(
+                dd + "/" + mm
+            );
+
+        }
+
+    });
+
+    document.getElementById("dateOutput").value =
+    result.join(", ");
+
+    const total=(weekendCount*4)+(extCount*2);
+
+    document.getElementById("calcOutput").innerText=
+
+`Total = (Weekend × 4) + (Ext Support × 2)
+= (${weekendCount} × 4) + (${extCount} × 2)
+= ${weekendCount * 4} + ${extCount * 2}
+= ${total}`;
+
+    document.getElementById("summaryOutput").innerText=
+
+`No of Days-Weekend : ${weekendCount}
+No of Days-Ext Support : ${extCount}
+Total : ${total}`;
+
+}
+
+function copyOutput(){
+
+    const text=
+        document.getElementById("dateOutput").value;
+
+    navigator.clipboard.writeText(text);
+
+    alert("Output copied successfully");
+
+}
+
+</script>
+<footer style="
+    margin-top:40px;
+    padding:20px;
+    text-align:center;
+    border-top:1px solid #e5e7eb;
+    color:#6b7280;
+    font-size:14px;
+">
+
+    Developed with
+    <span style="
+        color:#ef4444;
+        display:inline-block;
+        animation:pulse 1.5s infinite;
+    ">
+        ❤️
+    </span>
+    by
+
+    <a href="https://in.linkedin.com/in/yash-kurzekar"
+       target="_blank"
+       rel="noopener noreferrer"
+       title="Yash Kurzekar - Tata Consultancy Services | LinkedIn"
+       style="
+            color:#2563eb;
+            font-weight:600;
+            text-decoration:none;
+       ">
+        Yash Kurzekar
+    </a>
+
+</footer>
+
+<style>
+@keyframes pulse{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.25);}
+    100%{transform:scale(1);}
+}
+</style>
+</body>
+</html>
