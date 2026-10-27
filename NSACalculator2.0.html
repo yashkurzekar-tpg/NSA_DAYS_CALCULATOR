@@ -63,10 +63,17 @@ body{
     margin-bottom:15px;
 }
 
+.calendar-panel{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
 .calendar{
     display:grid;
     grid-template-columns:repeat(7,1fr);
     gap:6px;
+    width:100%;
 }
 
 .day-header{
@@ -122,6 +129,8 @@ textarea{
     white-space:pre-wrap;
     line-height:1.8;
     font-size:15px;
+    min-height:84px;
+    display:block;
 }
 
 .summary{
@@ -140,6 +149,17 @@ textarea{
 
 .btn:hover{
     background:#1d4ed8;
+}
+
+.clear-btn{
+    display:block;
+    width:100%;
+    margin-top:0;
+    background:#ef4444;
+}
+
+.clear-btn:hover{
+    background:#dc2626;
 }
 
 @media(max-width:1000px){
@@ -170,7 +190,13 @@ textarea{
 
             <div id="monthTitle"></div>
 
-            <div class="calendar" id="calendar"></div>
+            <div class="calendar-panel">
+                <div class="calendar" id="calendar"></div>
+
+                <button class="btn clear-btn" onclick="clearCalendarSelection()">
+                    Clear Calendar
+                </button>
+            </div>
 
         </div>
 
@@ -181,7 +207,7 @@ textarea{
             <div class="card">
                 <h2>Selected Dates Output</h2>
 
-                <textarea id="dateOutput" readonly></textarea>
+                <textarea id="dateOutput" readonly placeholder="Select dates..."></textarea>
 
                 <button class="btn" onclick="copyOutput()">
                     Copy Output
@@ -194,7 +220,10 @@ textarea{
                 <h2>Calculation</h2>
 
                 <div class="result-box" id="calcOutput">
-Select dates to calculate...
+Total = (Weekend × 4) + (Ext Support × 2)
+= (0 × 4) + (0 × 2)
+= 0 + 0
+= 0
                 </div>
             </div>
 
@@ -204,7 +233,9 @@ Select dates to calculate...
                 <h2>Result Summary</h2>
 
                 <div class="result-box summary" id="summaryOutput">
-Select dates to see summary...
+No of Days-Weekend : 0
+No of Days-Ext Support : 0
+Total : 0
                 </div>
             </div>
 
@@ -290,9 +321,27 @@ for(let d=1; d<=totalDays; d++){
     calendar.appendChild(div);
 }
 
+updateOutput();
+
 function updateOutput(){
 
     selected.sort((a,b)=>a-b);
+
+    if(selected.length===0){
+        const dateOutput = document.getElementById("dateOutput");
+        dateOutput.value = "";
+        dateOutput.placeholder = "Select dates...";
+        document.getElementById("calcOutput").innerText =
+`Total = (Weekend × 4) + (Ext Support × 2)
+= (0 × 4) + (0 × 2)
+= 0 + 0
+= 0`;
+        document.getElementById("summaryOutput").innerText =
+`No of Days-Weekend : 0
+No of Days-Ext Support : 0
+Total : 0`;
+        return;
+    }
 
     let weekendCount=0;
     let extCount=0;
@@ -349,6 +398,19 @@ Total : ${total}`;
 
 }
 
+function clearCalendarSelection(){
+    selected.length = 0;
+
+    document.querySelectorAll(".day.selected").forEach(dayEl => {
+        dayEl.classList.remove("selected");
+    });
+
+    const dateOutput = document.getElementById("dateOutput");
+    dateOutput.value = "";
+    dateOutput.placeholder = "Select dates...";
+    updateOutput();
+}
+
 function copyOutput(){
 
     const text=
@@ -375,10 +437,9 @@ function copyOutput(){
         color:#ef4444;
         display:inline-block;
         animation:pulse 1.5s infinite;
-    ">
-        ❤️
+    ">❤️
     </span>
-    by
+    by 
 
     <a href="https://in.linkedin.com/in/yash-kurzekar"
        target="_blank"
@@ -391,6 +452,19 @@ function copyOutput(){
        ">
         Yash Kurzekar
     </a>
+
+    <br><br>
+
+    <div style="
+        font-size:14px;
+        color:#9ca3af;
+        max-width:700px;
+        margin:0 auto;
+        line-height:1.5;
+    ">
+        <strong>Note:</strong> This is a static page that performs live calculations only.
+        No data, personal information, or cookies are collected, stored, or transmitted.
+    </div>
 
 </footer>
 
